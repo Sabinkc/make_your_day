@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:make_your_day/features/common/colors.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -11,7 +12,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushReplacementNamed('/onboarding');
     });
   }
 
@@ -23,26 +24,28 @@ class _SplashScreenState extends State<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue, Colors.lightBlue],
+            colors: [primaryColor, secondaryColor],
           ),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset('assets/splash.png', width: 150, height: 150),
+              Image.asset('assets/peace.png', width: 150, height: 150),
               SizedBox(height: 20),
               Text(
-                'My App',
+                'Positve mind leads to a positive day',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: whiteColor,
                 ),
               ),
               SizedBox(height: 40),
               CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor: AlwaysStoppedAnimation<Color>(whiteColor),
               ),
             ],
           ),
