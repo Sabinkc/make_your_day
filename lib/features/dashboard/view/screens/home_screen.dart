@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:make_your_day/features/dashboard/view/screens/affirmations_screen.dart';
 import 'package:make_your_day/features/dashboard/view/screens/compliments_screen.dart';
 import 'package:make_your_day/features/dashboard/view/screens/jokes_screen.dart';
-import 'package:make_your_day/features/dashboard/view/screens/menu_screen.dart';
+import 'package:make_your_day/features/menu/view/screens/menu_screen.dart';
 import 'package:make_your_day/features/dashboard/view/screens/motivations_screen.dart';
 import 'package:make_your_day/features/dashboard/view/screens/qoutes_screen.dart';
 import 'package:make_your_day/features/dashboard/view/widgets/category_card.dart';
