@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "159606992103",
+    "project_id": "make-your-day-84514",
+    "storage_bucket": "make-your-day-84514.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:159606992103:android:cf19f1f1e2df959b488642",
+        "android_client_info": {
+          "package_name": "com.example.make_your_day"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxuqSdyywaFav5xbB_quv33pYIltNfBVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
