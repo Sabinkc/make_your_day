@@ -48,6 +48,8 @@ dependencies {
     
     // Add Firebase Messaging for FCM
     implementation("com.google.firebase:firebase-messaging")
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+
     
     // Add Firebase Auth if needed
     // implementation("com.google.firebase:firebase-auth")
