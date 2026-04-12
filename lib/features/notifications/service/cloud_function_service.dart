@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -36,43 +37,28 @@ class CloudFunctionService {
     }
   }
 
-  // Register FCM token with Cloud Function
-  static Future<bool> registerFCMToken(String fcmToken) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        print('❌ User not authenticated');
-        return false;
-      }
-
-      // Get device info
-      String deviceType = 'unknown';
-      String deviceName = 'unknown';
-
-      if (await _isAndroid()) {
-        deviceType = 'android';
-        final androidInfo = await _deviceInfo.androidInfo;
-        deviceName = androidInfo.model;
-      } else if (await _isiOS()) {
-        deviceType = 'ios';
-        final iosInfo = await _deviceInfo.iosInfo;
-        deviceName = iosInfo.model;
-      }
-
-      final result = await _functions.httpsCallable('registerFCMToken').call({
-        'userId': user.uid,
-        'fcmToken': fcmToken,
-        'deviceType': deviceType,
-        'deviceName': deviceName,
-      });
-
-      print('✅ Token registered: ${result.data}');
-      return true;
-    } catch (e) {
-      print('❌ Error registering token: $e');
-      return false;
-    }
+static Future<bool> registerFCMToken(String fcmToken) async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    
+    final tokenObject = {
+      'token': fcmToken,
+      'deviceType': 'android',
+      'registeredAt': DateTime.now().toIso8601String(),  // Use DateTime string
+    };
+    
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+      'fcm_tokens': FieldValue.arrayUnion([tokenObject]),
+      'lastActive': DateTime.now().toIso8601String(),
+    }, SetOptions(merge: true));
+    
+    return true;
+  } catch (e) {
+    print('❌ Error registering token: $e');
+    return false;
   }
+}
 
   // Remove FCM token (call on logout)
   static Future<bool> removeFCMToken(String fcmToken) async {

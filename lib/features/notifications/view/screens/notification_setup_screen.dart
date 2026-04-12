@@ -1,3 +1,5 @@
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -109,12 +111,12 @@ class _NotificationSetupScreenState extends State<NotificationSetupScreen> {
     // Updated to use the text from controller directly
     _userName = _nameController.text;
 
-    // Save to Cloud Functions
-    final success = await CloudFunctionService.saveNotificationSettings(
-      notificationsEnabled: _notificationsEnabled,
-      userName: _userName,
-      services: servicesData,
-    );
+  // ✅ Cast to Map<String, dynamic>
+final success = await CloudFunctionService.saveNotificationSettings(
+  notificationsEnabled: _notificationsEnabled,
+  userName: _userName,
+  services: Map<String, dynamic>.from(servicesData),
+);
 
     if (success) {
       final settingsData = {
@@ -422,19 +424,73 @@ class _NotificationSetupScreenState extends State<NotificationSetupScreen> {
   }
 }
 
-// --- ESSENTIAL: This class was missing in your snippet ---
+
 class CloudFunctionService {
-  static Future<bool> saveNotificationSettings({
+  static final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  
+static Future<bool> saveNotificationSettings({
     required bool notificationsEnabled,
     required String userName,
-    required Map services,
+    required Map<String, dynamic> services,  // ← Explicit type
   }) async {
     try {
-      // Mocking the call. Replace this with actual Firebase Functions logic:
-      // final result = await FirebaseFunctions.instance.httpsCallable('saveSettings').call({...});
-      await Future.delayed(const Duration(seconds: 1)); // Simulate network
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('❌ User not authenticated');
+        return false;
+      }
+      
+      print('📤 Saving settings for user: ${user.uid}');
+      print('📤 Services data: $services');
+      
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('saveNotificationSettings')
+          .call({
+        'userId': user.uid,
+        'userName': userName,
+        'notificationsEnabled': notificationsEnabled,
+        'services': services,
+      });
+      
+      print('✅ Settings saved: ${result.data}');
+      return true;
+      
+    } catch (e) {
+      print('❌ Error saving settings: $e');
+      return false;
+    }
+  }
+  
+  static Future<bool> registerFCMToken(String fcmToken) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return false;
+      
+      await _functions.httpsCallable('registerFCMToken').call({
+        'userId': user.uid,
+        'fcmToken': fcmToken,
+      });
+      
       return true;
     } catch (e) {
+      print('❌ Error registering token: $e');
+      return false;
+    }
+  }
+  
+  static Future<bool> sendTestNotification({String? serviceId}) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return false;
+      
+      await _functions.httpsCallable('sendTestNotification').call({
+        'userId': user.uid,
+        'serviceId': serviceId ?? 'affirmations',
+      });
+      
+      return true;
+    } catch (e) {
+      print('❌ Error sending test notification: $e');
       return false;
     }
   }
