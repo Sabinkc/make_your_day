@@ -34,25 +34,38 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [HomeContent(), MenuScreen()],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+      bottomNavigationBar: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 400;
+          return BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            selectedItemColor: Colors.blue,
+            unselectedItemColor: Colors.grey,
+            selectedLabelStyle: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: isSmallScreen ? 10 : 12,
+            ),
+            unselectedLabelStyle: GoogleFonts.poppins(
+              fontSize: isSmallScreen ? 10 : 12,
+            ),
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home, size: isSmallScreen ? 20 : 24),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.menu, size: isSmallScreen ? 20 : 24),
+                label: 'Menu',
+              ),
+            ],
+          );
         },
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: GoogleFonts.poppins(
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-        ),
-        unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Menu'),
-        ],
       ),
     );
   }
@@ -62,30 +75,78 @@ class _HomeScreenState extends State<HomeScreen> {
 class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    // Determine responsive values
+    final isTablet = screenWidth > 600;
+    final isSmallPhone = screenWidth < 360;
+    final isMediumPhone = screenWidth >= 360 && screenWidth <= 600;
+    
+    // Grid configuration
+    int crossAxisCount = 2;
+    double childAspectRatio = 0.9;
+    double crossAxisSpacing = 15;
+    double mainAxisSpacing = 15;
+    double horizontalPadding = 20;
+    double verticalPadding = 20;
+    
+    if (isTablet) {
+      crossAxisCount = 3;
+      childAspectRatio = 0.85;
+      crossAxisSpacing = 20;
+      mainAxisSpacing = 20;
+      horizontalPadding = 24;
+      verticalPadding = 24;
+    } else if (isSmallPhone) {
+      crossAxisCount = 2;
+      childAspectRatio = 0.85;
+      crossAxisSpacing = 10;
+      mainAxisSpacing = 10;
+      horizontalPadding = 12;
+      verticalPadding = 12;
+    }
+    
+    // Font sizes
+    final titleSize = isSmallPhone ? 20.0 : (isTablet ? 28.0 : 24.0);
+    final bannerTextSize = isSmallPhone ? 12.0 : (isTablet ? 16.0 : 14.0);
+    final bannerHeadingSize = isSmallPhone ? 16.0 : (isTablet ? 22.0 : 20.0);
+    final iconSize = isSmallPhone ? 40.0 : (isTablet ? 60.0 : 50.0);
+    
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          'Make Your Day',
-          style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => NotificationSetupScreen(),
-                ),
-              );
-            },
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(isSmallPhone ? 50 : kToolbarHeight),
+        child: AppBar(
+          title: Text(
+            'Make Your Day',
+            style: GoogleFonts.poppins(
+              fontSize: titleSize,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ],
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: Icon(
+                Icons.notifications,
+                size: isSmallPhone ? 20 : 24,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NotificationSetupScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -97,10 +158,16 @@ class HomeContent extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Welcome Banner
+            // Responsive Welcome Banner
             Container(
-              margin: EdgeInsets.all(20),
-              padding: EdgeInsets.all(20),
+              margin: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: verticalPadding / 2,
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: isSmallPhone ? 12 : 20,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.blue.shade600, Colors.purple.shade600],
@@ -114,9 +181,9 @@ class HomeContent extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Good Morning!',
+                          _getGreeting(),
                           style: GoogleFonts.poppins(
-                            fontSize: 14,
+                            fontSize: bannerTextSize,
                             color: Colors.white.withOpacity(0.9),
                           ),
                         ),
@@ -124,7 +191,7 @@ class HomeContent extends StatelessWidget {
                         Text(
                           'Ready for positivity?',
                           style: GoogleFonts.poppins(
-                            fontSize: 20,
+                            fontSize: bannerHeadingSize,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -134,7 +201,7 @@ class HomeContent extends StatelessWidget {
                   ),
                   Icon(
                     Icons.wb_sunny,
-                    size: 50,
+                    size: iconSize,
                     color: Colors.white.withOpacity(0.9),
                   ),
                 ],
@@ -144,18 +211,29 @@ class HomeContent extends StatelessWidget {
             // Services Grid - Fetch from Firebase
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(horizontalPadding),
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('all_services')
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      return Center(
+                        child: Text(
+                          'Error: ${snapshot.error}',
+                          style: GoogleFonts.poppins(
+                            fontSize: isSmallPhone ? 12 : 14,
+                          ),
+                        ),
+                      );
                     }
 
                     if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: isSmallPhone ? 2 : 3,
+                        ),
+                      );
                     }
 
                     final services = snapshot.data!.docs;
@@ -165,11 +243,18 @@ class HomeContent extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.category, size: 64, color: Colors.grey),
+                            Icon(
+                              Icons.category,
+                              size: isSmallPhone ? 48 : 64,
+                              color: Colors.grey,
+                            ),
                             SizedBox(height: 16),
                             Text(
                               'No services found',
-                              style: GoogleFonts.poppins(color: Colors.grey),
+                              style: GoogleFonts.poppins(
+                                fontSize: isSmallPhone ? 14 : 16,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -178,10 +263,10 @@ class HomeContent extends StatelessWidget {
 
                     return GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 15,
-                        mainAxisSpacing: 15,
-                        childAspectRatio: 0.9,
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: crossAxisSpacing,
+                        mainAxisSpacing: mainAxisSpacing,
+                        childAspectRatio: childAspectRatio,
                       ),
                       itemCount: services.length,
                       itemBuilder: (context, index) {
@@ -217,19 +302,11 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  void _showNotificationSettings(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Notifications'),
-        content: Text('Manage your notification preferences'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
-          ),
-        ],
-      ),
-    );
+  // Helper method to get dynamic greeting based on time of day
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning! 🌅';
+    if (hour < 17) return 'Good Afternoon! ☀️';
+    return 'Good Evening! 🌙';
   }
 }

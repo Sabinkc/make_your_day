@@ -72,12 +72,29 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions for responsive design
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+    final isSmallPhone = screenWidth < 360;
+    
+    // Responsive values
+    final horizontalPadding = isSmallPhone ? 12.0 : (isTablet ? 24.0 : 20.0);
+    final verticalPadding = isSmallPhone ? 12.0 : (isTablet ? 24.0 : 20.0);
+    final cardSpacing = isSmallPhone ? 10.0 : (isTablet ? 20.0 : 15.0);
+    final titleFontSize = isSmallPhone ? 16.0 : (isTablet ? 20.0 : 18.0);
+    final categoryTitleFontSize = isSmallPhone ? 16.0 : (isTablet ? 20.0 : 18.0);
+    final iconSize = isSmallPhone ? 32.0 : (isTablet ? 48.0 : 40.0);
+    final childAspectRatio = isTablet ? 0.8 : 0.85;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           widget.serviceName,
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: isSmallPhone ? 18 : 20,
+          ),
         ),
         backgroundColor: _getColor(),
         foregroundColor: Colors.white,
@@ -95,16 +112,16 @@ class _ServiceScreenState extends State<ServiceScreen> {
           children: [
             // Content of the Day Card
             Container(
-              margin: EdgeInsets.all(20),
-              padding: EdgeInsets.all(20),
+              margin: EdgeInsets.all(horizontalPadding),
+              padding: EdgeInsets.all(isSmallPhone ? 12 : 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(colors: [_getColor(), _getColor()]),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(isSmallPhone ? 15 : 20),
                 boxShadow: [
                   BoxShadow(
                     color: _getColor().withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: Offset(0, 5),
+                    blurRadius: isSmallPhone ? 10 : 15,
+                    offset: Offset(0, isSmallPhone ? 3 : 5),
                   ),
                 ],
               ),
@@ -113,29 +130,29 @@ class _ServiceScreenState extends State<ServiceScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.white, size: 24),
+                      Icon(Icons.star, color: Colors.white, size: isSmallPhone ? 20 : 24),
                       SizedBox(width: 8),
                       Text(
                         '${widget.serviceName} of the Day',
                         style: GoogleFonts.poppins(
-                          fontSize: 16,
+                          fontSize: isSmallPhone ? 14 : 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 15),
+                  SizedBox(height: isSmallPhone ? 10 : 15),
                   Text(
                     _contentOfTheDay,
                     style: GoogleFonts.poppins(
-                      fontSize: 18,
+                      fontSize: isSmallPhone ? 16 : 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       height: 1.3,
                     ),
                   ),
-                  SizedBox(height: 15),
+                  SizedBox(height: isSmallPhone ? 10 : 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -143,17 +160,20 @@ class _ServiceScreenState extends State<ServiceScreen> {
                         onPressed: _refreshContentOfTheDay,
                         icon: Icon(
                           Icons.refresh,
-                          size: 18,
+                          size: isSmallPhone ? 16 : 18,
                           color: Colors.white,
                         ),
                         label: Text(
                           'New ${widget.serviceName.substring(0, widget.serviceName.length - 1)}',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            fontSize: isSmallPhone ? 11 : 14,
+                            color: Colors.white,
+                          ),
                         ),
                         style: TextButton.styleFrom(
                           backgroundColor: Colors.white.withOpacity(0.2),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(isSmallPhone ? 15 : 20),
                           ),
                         ),
                       ),
@@ -165,13 +185,13 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
             // Subcategories Section
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: Row(
                 children: [
                   Text(
                     'Choose Category',
                     style: GoogleFonts.poppins(
-                      fontSize: 20,
+                      fontSize: categoryTitleFontSize,
                       fontWeight: FontWeight.bold,
                       color: _getColor(),
                     ),
@@ -189,7 +209,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
                       return Text(
                         '$count categories',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: isSmallPhone ? 10 : 12,
                           color: Colors.grey.shade600,
                         ),
                       );
@@ -198,12 +218,12 @@ class _ServiceScreenState extends State<ServiceScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 15),
+            SizedBox(height: isSmallPhone ? 10 : 15),
 
             // Subcategories Grid - Stream for real-time updates
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(horizontalPadding),
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('all_services')
@@ -212,11 +232,22 @@ class _ServiceScreenState extends State<ServiceScreen> {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      return Center(
+                        child: Text(
+                          'Error: ${snapshot.error}',
+                          style: GoogleFonts.poppins(
+                            fontSize: isSmallPhone ? 12 : 14,
+                          ),
+                        ),
+                      );
                     }
 
                     if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: isSmallPhone ? 2 : 3,
+                        ),
+                      );
                     }
 
                     final subcategories = snapshot.data!.docs;
@@ -226,11 +257,18 @@ class _ServiceScreenState extends State<ServiceScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.folder, size: 64, color: Colors.grey),
-                            SizedBox(height: 16),
+                            Icon(
+                              Icons.folder,
+                              size: isSmallPhone ? 48 : 64,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: isSmallPhone ? 12 : 16),
                             Text(
                               'No categories found',
-                              style: GoogleFonts.poppins(color: Colors.grey),
+                              style: GoogleFonts.poppins(
+                                fontSize: isSmallPhone ? 14 : 16,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -239,10 +277,10 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
                     return GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 15,
-                        mainAxisSpacing: 15,
-                        childAspectRatio: 0.85,
+                        crossAxisCount: isTablet ? 3 : 2,
+                        crossAxisSpacing: cardSpacing,
+                        mainAxisSpacing: cardSpacing,
+                        childAspectRatio: childAspectRatio,
                       ),
                       itemCount: subcategories.length,
                       itemBuilder: (context, index) {
@@ -254,6 +292,8 @@ class _ServiceScreenState extends State<ServiceScreen> {
                           subId: subId,
                           subName: subName,
                           subDoc: subDoc,
+                          iconSize: iconSize,
+                          isSmallPhone: isSmallPhone,
                         );
                       },
                     );
@@ -271,6 +311,8 @@ class _ServiceScreenState extends State<ServiceScreen> {
     required String subId,
     required String subName,
     required QueryDocumentSnapshot subDoc,
+    required double iconSize,
+    required bool isSmallPhone,
   }) {
     return GestureDetector(
       onTap: () {
@@ -290,47 +332,53 @@ class _ServiceScreenState extends State<ServiceScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(isSmallPhone ? 15 : 20),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, 2),
+              blurRadius: isSmallPhone ? 8 : 10,
+              offset: Offset(0, isSmallPhone ? 1 : 2),
             ),
           ],
-          border: Border.all(color: _getColor().withOpacity(0.3), width: 1),
+          border: Border.all(
+            color: _getColor().withOpacity(0.3),
+            width: isSmallPhone ? 0.5 : 1,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: EdgeInsets.all(15),
+              padding: EdgeInsets.all(isSmallPhone ? 10 : 15),
               decoration: BoxDecoration(
                 color: _getColor().withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 _getSubcategoryIcon(subId),
-                size: 40,
+                size: iconSize,
                 color: _getColor(),
               ),
             ),
-            SizedBox(height: 15),
+            SizedBox(height: isSmallPhone ? 10 : 15),
             Text(
               subName,
               style: GoogleFonts.poppins(
-                fontSize: 18,
+                fontSize: isSmallPhone ? 14 : 18,
                 fontWeight: FontWeight.bold,
                 color: _getColor(),
               ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(height: 5),
+            SizedBox(height: isSmallPhone ? 4 : 5),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
+              padding: EdgeInsets.symmetric(horizontal: isSmallPhone ? 6 : 10),
               child: Text(
                 _getSubcategoryDescription(subId),
                 style: GoogleFonts.poppins(
-                  fontSize: 11,
+                  fontSize: isSmallPhone ? 9 : 11,
                   color: Colors.grey.shade600,
                 ),
                 textAlign: TextAlign.center,
@@ -338,12 +386,15 @@ class _ServiceScreenState extends State<ServiceScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: isSmallPhone ? 6 : 10),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallPhone ? 8 : 12,
+                vertical: isSmallPhone ? 2 : 4,
+              ),
               decoration: BoxDecoration(
                 color: _getColor().withOpacity(0.1),
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(isSmallPhone ? 10 : 15),
               ),
               child: FutureBuilder<QuerySnapshot>(
                 future: subDoc.reference.collection('data').get(),
@@ -352,7 +403,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
                   return Text(
                     '$count items',
                     style: GoogleFonts.poppins(
-                      fontSize: 10,
+                      fontSize: isSmallPhone ? 8 : 10,
                       color: _getColor(),
                       fontWeight: FontWeight.w500,
                     ),

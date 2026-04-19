@@ -140,32 +140,59 @@ class TimezoneService {
     return utcTimeString;
   }
 
-  // Convert UTC time back to local time (returns 24-hour format)
-  static String convertUTCToLocal({
-    required String utcTime,
-    required String timezone,
-  }) {
-    try {
-      final parts = utcTime.split(':');
-      final utcHour = int.parse(parts[0]);
-      final utcMinute = int.parse(parts[1]);
+  // // Convert UTC time back to local time (returns 24-hour format)
+  // static String convertUTCToLocal({
+  //   required String utcTime,
+  //   required String timezone,
+  // }) {
+  //   try {
+  //     final parts = utcTime.split(':');
+  //     final utcHour = int.parse(parts[0]);
+  //     final utcMinute = int.parse(parts[1]);
       
-      final tz.Location location = tz.getLocation(timezone);
-      final tz.TZDateTime now = tz.TZDateTime.now(location);
+  //     final tz.Location location = tz.getLocation(timezone);
+  //     final tz.TZDateTime now = tz.TZDateTime.now(location);
       
-      final DateTime utcDateTime = DateTime(now.year, now.month, now.day, utcHour, utcMinute);
-      final tz.TZDateTime localDateTime = tz.TZDateTime.from(utcDateTime, location);
+  //     final DateTime utcDateTime = DateTime(now.year, now.month, now.day, utcHour, utcMinute);
+  //     final tz.TZDateTime localDateTime = tz.TZDateTime.from(utcDateTime, location);
       
-      final String localTimeString = '${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}';
+  //     final String localTimeString = '${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}';
       
-      print('🕐 UTC: $utcTime → Local: $localTimeString ($timezone)');
+  //     print('🕐 UTC: $utcTime → Local: $localTimeString ($timezone)');
       
-      return localTimeString;
-    } catch (e) {
-      print('❌ Error converting UTC to local: $e');
-      return utcTime;
-    }
+  //     return localTimeString;
+  //   } catch (e) {
+  //     print('❌ Error converting UTC to local: $e');
+  //     return utcTime;
+  //   }
+  // }
+
+  // Convert UTC time back to local time (returns 24-hour format like "13:15")
+static String convertUTCToLocal({
+  required String utcTime,
+  required String timezone,
+}) {
+  try {
+    final parts = utcTime.split(':');
+    final utcHour = int.parse(parts[0]);
+    final utcMinute = int.parse(parts[1]);
+    
+    final tz.Location location = tz.getLocation(timezone);
+    final tz.TZDateTime now = tz.TZDateTime.now(location);
+    
+    // Create UTC DateTime
+    final DateTime utcDateTime = DateTime(now.year, now.month, now.day, utcHour, utcMinute);
+    
+    // Convert to local time
+    final tz.TZDateTime localDateTime = tz.TZDateTime.from(utcDateTime, location);
+    
+    // Return in 24-hour format
+    return '${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}';
+  } catch (e) {
+    print('❌ Error converting UTC to local: $e');
+    return utcTime; // Return original if conversion fails
   }
+}
 
   // Get UTC offset for display (e.g., "UTC+5:45")
   static String getUTCOffset(String timezone) {

@@ -12,7 +12,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacementNamed('/onboarding');
+      Navigator.of(context).pushReplacementNamed('/home');
     });
   }
 
@@ -34,13 +34,16 @@ class _SplashScreenState extends State<SplashScreen> {
             children: [
               Image.asset('assets/peace.png', width: 150, height: 150),
               SizedBox(height: 20),
-              Text(
-                'Positve mind leads to a positive day',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: whiteColor,
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  'Positve mind leads to a positive day',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: whiteColor,
+                  ),
                 ),
               ),
               SizedBox(height: 40),

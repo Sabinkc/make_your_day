@@ -22,25 +22,33 @@ class CategoryContentScreen extends StatefulWidget {
   State<CategoryContentScreen> createState() => _CategoryContentScreenState();
 }
 
-class _CategoryContentScreenState extends State<CategoryContentScreen> {
+class _CategoryContentScreenState extends State<CategoryContentScreen>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   List<QueryDocumentSnapshot> _contents = [];
   bool _isLoading = true;
   int _currentIndex = 0;
   double _scrollOffset = 0;
   bool _isScrolling = false;
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
     _loadContents();
     _scrollController.addListener(_onScroll);
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _animationController.forward();
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -49,7 +57,6 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       final double offset = _scrollController.offset;
       final double itemHeight = MediaQuery.of(context).size.height * 0.65;
 
-      // Calculate which item is currently visible
       int newIndex = ((offset + itemHeight / 2) / itemHeight).floor();
       newIndex = newIndex.clamp(0, _contents.length - 1);
 
@@ -58,6 +65,8 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
           _currentIndex = newIndex;
           _scrollOffset = offset;
         });
+        _animationController.reset();
+        _animationController.forward();
       }
     }
   }
@@ -106,6 +115,8 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
             setState(() {
               _currentIndex = index;
             });
+            _animationController.reset();
+            _animationController.forward();
           });
     }
   }
@@ -221,7 +232,22 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
   Widget build(BuildContext context) {
     final themeColor = _getColor();
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     final itemHeight = screenHeight * 0.65;
+    
+    // Responsive values - all as double
+    final isTablet = screenWidth > 600;
+    final isSmallPhone = screenWidth < 360;
+    
+    final double horizontalPadding = isSmallPhone ? 12.0 : (isTablet ? 24.0 : 20.0);
+    final double verticalPadding = isSmallPhone ? 8.0 : (isTablet ? 16.0 : 12.0);
+    final double titleFontSize = isSmallPhone ? 16.0 : 20.0;
+    final double subtitleFontSize = isSmallPhone ? 10.0 : 12.0;
+    final double contentFontSize = isSmallPhone ? 18.0 : 22.0;
+    final double actionTextFontSize = isSmallPhone ? 11.0 : 13.0;
+    final double iconSize = isSmallPhone ? 48.0 : 60.0;
+    final double badgeSize = isSmallPhone ? 28.0 : 36.0;
+    final double badgeFontSize = isSmallPhone ? 14.0 : 18.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -233,13 +259,13 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
               widget.subcategoryName,
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
+                fontSize: titleFontSize,
               ),
             ),
             Text(
               widget.serviceName,
               style: GoogleFonts.poppins(
-                fontSize: 12,
+                fontSize: subtitleFontSize,
                 color: Colors.white.withOpacity(0.8),
               ),
             ),
@@ -271,7 +297,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                   Text(
                     'No content found',
                     style: GoogleFonts.poppins(
-                      fontSize: 18,
+                      fontSize: isSmallPhone ? 14.0 : 18.0,
                       color: Colors.grey,
                     ),
                   ),
@@ -289,7 +315,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
               child: Column(
                 children: [
                   // Category Info Card
-                  _buildInfoCard(themeColor),
+                  _buildInfoCard(themeColor, isSmallPhone, isTablet),
 
                   // Scrollable Content
                   Expanded(
@@ -303,7 +329,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                       child: ListView.builder(
                         controller: _scrollController,
                         itemCount: _contents.length,
-                        padding: EdgeInsets.symmetric(vertical: 10),
+                        padding: EdgeInsets.symmetric(vertical: verticalPadding),
                         physics: const BouncingScrollPhysics(),
                         itemExtent: itemHeight,
                         itemBuilder: (context, index) {
@@ -312,6 +338,13 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                             index,
                             isCurrent,
                             themeColor,
+                            isSmallPhone,
+                            isTablet,
+                            contentFontSize,
+                            actionTextFontSize,
+                            iconSize,
+                            badgeSize,
+                            badgeFontSize,
                           );
                         },
                       ),
@@ -319,28 +352,35 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                   ),
 
                   // Navigation Buttons Below
-                  _buildNavigationRow(themeColor),
+                  _buildNavigationRow(themeColor, isSmallPhone, isTablet),
                   const SizedBox(height: 8),
                 ],
               ),
             ),
       bottomNavigationBar: _contents.isEmpty
           ? null
-          : _buildBottomBar(themeColor),
+          : _buildBottomBar(themeColor, isSmallPhone, isTablet),
     );
   }
 
-  Widget _buildInfoCard(Color themeColor) {
+  Widget _buildInfoCard(Color themeColor, bool isSmallPhone, bool isTablet) {
+    final double padding = isSmallPhone ? 8.0 : (isTablet ? 16.0 : 12.0);
+    final double iconSize = isSmallPhone ? 24.0 : (isTablet ? 32.0 : 28.0);
+    final double fontSize = isSmallPhone ? 10.0 : (isTablet ? 14.0 : 12.0);
+    final double countFontSize = isSmallPhone ? 9.0 : (isTablet ? 12.0 : 10.0);
+    final double borderRadius = isSmallPhone ? 12.0 : 15.0;
+    final double iconBorderRadius = isSmallPhone ? 10.0 : 12.0;
+    
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.all(isSmallPhone ? 12.0 : 16.0),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: themeColor.withOpacity(0.1),
-            blurRadius: 8,
+            blurRadius: isSmallPhone ? 6.0 : 8.0,
             offset: const Offset(0, 2),
           ),
         ],
@@ -348,14 +388,14 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(isSmallPhone ? 8.0 : 10.0),
             decoration: BoxDecoration(
               color: themeColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(iconBorderRadius),
             ),
-            child: Icon(_getSubcategoryIcon(), color: themeColor, size: 28),
+            child: Icon(_getSubcategoryIcon(), color: themeColor, size: iconSize),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isSmallPhone ? 8.0 : 12.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,15 +403,17 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                 Text(
                   widget.subcategoryDescription,
                   style: GoogleFonts.poppins(
-                    fontSize: 12,
+                    fontSize: fontSize,
                     color: Colors.grey.shade700,
                   ),
+                  maxLines: isSmallPhone ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: isSmallPhone ? 2.0 : 4.0),
                 Text(
                   '${_contents.length} items',
                   style: GoogleFonts.poppins(
-                    fontSize: 10,
+                    fontSize: countFontSize,
                     color: themeColor,
                     fontWeight: FontWeight.w600,
                   ),
@@ -384,66 +426,69 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
     );
   }
 
-  Widget _buildNavigationRow(Color themeColor) {
+  Widget _buildNavigationRow(Color themeColor, bool isSmallPhone, bool isTablet) {
+    final double buttonPadding = isSmallPhone ? 6.0 : 10.0;
+    final double fontSize = isSmallPhone ? 11.0 : (isTablet ? 14.0 : 13.0);
+    final double spacing = isSmallPhone ? 8.0 : 12.0;
+    final double borderRadius = isSmallPhone ? 20.0 : 25.0;
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: isSmallPhone ? 12.0 : 20.0, vertical: isSmallPhone ? 4.0 : 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Previous Button
           Expanded(
             child: OutlinedButton.icon(
               onPressed: _previous,
-              icon: const Icon(Icons.arrow_upward, size: 18),
+              icon: Icon(Icons.arrow_upward, size: isSmallPhone ? 14.0 : 18.0),
               label: Text(
                 _currentIndex > 0 ? 'Previous' : 'Start',
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: fontSize),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: themeColor,
                 side: BorderSide(color: themeColor),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: EdgeInsets.symmetric(vertical: buttonPadding),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(borderRadius),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
-
-          // Current Position Indicator
+          SizedBox(width: spacing),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallPhone ? 12.0 : 16.0,
+              vertical: isSmallPhone ? 6.0 : 8.0,
+            ),
             decoration: BoxDecoration(
               color: themeColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(borderRadius),
             ),
             child: Text(
               '${_currentIndex + 1} / ${_contents.length}',
               style: GoogleFonts.poppins(
-                fontSize: 14,
+                fontSize: isSmallPhone ? 12.0 : (isTablet ? 16.0 : 14.0),
                 fontWeight: FontWeight.bold,
                 color: themeColor,
               ),
             ),
           ),
-          const SizedBox(width: 12),
-
-          // Next Button
+          SizedBox(width: spacing),
           Expanded(
             child: ElevatedButton.icon(
               onPressed: _next,
-              icon: const Icon(Icons.arrow_downward, size: 18),
+              icon: Icon(Icons.arrow_downward, size: isSmallPhone ? 14.0 : 18.0),
               label: Text(
                 _currentIndex + 1 < _contents.length ? 'Next' : 'End',
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: fontSize),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: themeColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: EdgeInsets.symmetric(vertical: buttonPadding),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(borderRadius),
                 ),
               ),
             ),
@@ -453,152 +498,187 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
     );
   }
 
-  Widget _buildContentCard(int index, bool isCurrent, Color themeColor) {
+  Widget _buildContentCard(
+    int index,
+    bool isCurrent,
+    Color themeColor,
+    bool isSmallPhone,
+    bool isTablet,
+    double contentFontSize,
+    double actionTextFontSize,
+    double iconSize,
+    double badgeSize,
+    double badgeFontSize,
+  ) {
+    final double marginHorizontal = isSmallPhone ? 12.0 : 20.0;
+    final double marginVertical = isSmallPhone ? 6.0 : 10.0;
+    final double padding = isSmallPhone ? 16.0 : 24.0;
+    final double borderRadius = isSmallPhone ? 20.0 : 25.0;
+    final double blurRadius = isCurrent ? (isSmallPhone ? 15.0 : 20.0) : (isSmallPhone ? 6.0 : 8.0);
+    final double borderWidth = isCurrent ? (isSmallPhone ? 1.5 : 2.0) : (isSmallPhone ? 0.5 : 1.0);
+    
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOutCubic,
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      margin: EdgeInsets.symmetric(horizontal: marginHorizontal, vertical: marginVertical),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: isCurrent ? themeColor.withOpacity(0.3) : Colors.black12,
-            blurRadius: isCurrent ? 20 : 8,
+            blurRadius: blurRadius,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
           color: isCurrent ? themeColor : themeColor.withOpacity(0.2),
-          width: isCurrent ? 2 : 1,
+          width: borderWidth,
         ),
       ),
       child: AnimatedScale(
         duration: const Duration(milliseconds: 400),
         scale: isCurrent ? 1.0 : 0.95,
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(padding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Number Badge
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
+                width: badgeSize,
+                height: badgeSize,
                 decoration: BoxDecoration(
                   color: isCurrent ? themeColor : themeColor.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isCurrent ? Colors.white : themeColor,
+                child: Center(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: TextStyle(
+                      fontSize: badgeFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: isCurrent ? Colors.white : themeColor,
+                    ),
+                    child: Text('${index + 1}'),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Main Icon with Animation
+              SizedBox(height: isSmallPhone ? 16.0 : 24.0),
+              
+              // Main Icon with smooth scale transition
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(scale: animation, child: child),
+                  return ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
                   );
                 },
                 child: Icon(
                   _getMainIcon(),
                   key: ValueKey(index),
-                  size: 60,
+                  size: iconSize,
                   color: themeColor,
                 ),
               ),
-              const SizedBox(height: 32),
-
-              // Content Text with Slide Transition
+              SizedBox(height: isSmallPhone ? 20.0 : 32.0),
+              
+              // Content Text with smooth fade and slide transition
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 500),
                 transitionBuilder: (child, animation) {
                   return FadeTransition(
                     opacity: animation,
                     child: SlideTransition(
-                      position:
-                          Tween<Offset>(
-                            begin: const Offset(0, 0.2),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            ),
-                          ),
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.1),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
                       child: child,
                     ),
                   );
                 },
-                child: Text(
-                  _getContentValue(index),
+                child: Container(
                   key: ValueKey(index),
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-                    height: 1.4,
-                    color: isCurrent ? Colors.black87 : Colors.grey.shade600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 28),
-
-              // Action Text (only for current item)
-              if (isCurrent)
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 300),
-                  scale: 1.0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: themeColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(30),
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 300),
+                    style: GoogleFonts.poppins(
+                      fontSize: contentFontSize,
+                      fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+                      height: 1.4,
+                      color: isCurrent ? Colors.black87 : Colors.grey.shade600,
                     ),
                     child: Text(
-                      _getActionText(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: themeColor,
-                        fontWeight: FontWeight.w600,
+                      _getContentValue(index),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: isSmallPhone ? 16.0 : 28.0),
+              
+              // Action Text (only for current item)
+              if (isCurrent)
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: 1.0,
+                  child: AnimatedScale(
+                    duration: const Duration(milliseconds: 400),
+                    scale: 1.0,
+                    curve: Curves.elasticOut,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmallPhone ? 12.0 : 18.0,
+                        vertical: isSmallPhone ? 6.0 : 10.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: themeColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(isSmallPhone ? 20.0 : 30.0),
+                      ),
+                      child: Text(
+                        _getActionText(),
+                        style: GoogleFonts.poppins(
+                          fontSize: actionTextFontSize,
+                          color: themeColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
                 ),
-
+              
               // Scroll Hint
-              if (isCurrent && _contents.length > 1)
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.swipe_vertical,
-                        size: 16,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Scroll up/down to navigate',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: Colors.grey.shade400,
+              if (isCurrent && _contents.length > 1 && !isSmallPhone)
+                FadeTransition(
+                  opacity: _animationController.drive(
+                    Tween<double>(begin: 0.3, end: 1.0),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.swipe_vertical, size: 16.0, color: Colors.grey.shade400),
+                        const SizedBox(width: 6.0),
+                        Text(
+                          'Scroll up/down to navigate',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.0,
+                            color: Colors.grey.shade400,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -608,32 +688,36 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
     );
   }
 
-  Widget _buildBottomBar(Color themeColor) {
+  Widget _buildBottomBar(Color themeColor, bool isSmallPhone, bool isTablet) {
+    final double fontSize = isSmallPhone ? 10.0 : (isTablet ? 12.0 : 11.0);
+    final double iconSize = isSmallPhone ? 16.0 : (isTablet ? 20.0 : 18.0);
+    final double padding = isSmallPhone ? 12.0 : 20.0;
+    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10.0)],
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: padding, vertical: isSmallPhone ? 4.0 : 8.0),
           child: Row(
             children: [
-              Icon(Icons.swipe_vertical, color: themeColor, size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.swipe_vertical, color: themeColor, size: iconSize),
+              SizedBox(width: isSmallPhone ? 6.0 : 8.0),
               Expanded(
                 child: Text(
-                  'Scroll vertically • View All to browse',
+                  isSmallPhone ? 'Scroll • View All' : 'Scroll vertically • View All to browse',
                   style: GoogleFonts.poppins(
-                    fontSize: 11,
+                    fontSize: fontSize,
                     color: Colors.grey.shade600,
                   ),
                 ),
               ),
               TextButton.icon(
                 onPressed: _showAllContent,
-                icon: const Icon(Icons.list, size: 16),
-                label: const Text('View All', style: TextStyle(fontSize: 12)),
+                icon: Icon(Icons.list, size: isSmallPhone ? 14.0 : 16.0),
+                label: Text('View All', style: TextStyle(fontSize: isSmallPhone ? 10.0 : 12.0)),
                 style: TextButton.styleFrom(foregroundColor: themeColor),
               ),
             ],
@@ -643,7 +727,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
     );
   }
 
-  // --- Helper Methods ---
+  // --- Helper Methods (unchanged) ---
 
   Color _getColor() {
     final Map<String, Color> colors = {
